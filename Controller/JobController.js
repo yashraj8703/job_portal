@@ -3,8 +3,9 @@ const Job = require("../Model/Job");
 
 exports.createjob = async (req, res) => {
   try {
-    const job = await Job.create(req.body); 
-
+    const recruiterId = req.recruiter.recruiterId;
+    const jobData = { ...req.body, recruiter: recruiterId };
+    const job = await Job.create(jobData);
     res.status(201).json({
       message: "✅ job created successfully",
       job,
@@ -55,7 +56,9 @@ exports.deletejobById = async (req, res) => {
     if (!deletejob) {
       return res.status(404).json({ message: "❌ job not found" });
     }
-    res.status(200).json({ msg: "job deleted successfully", jobId: deletejob._id });
+    res
+      .status(200)
+      .json({ msg: "job deleted successfully", jobId: deletejob._id });
   } catch (err) {
     console.error(err);
     res.status(500).json({

@@ -2,9 +2,11 @@ const express=require("express")
 const router=express.Router()
 
 const jobController=require("../Controller/JobController")
+const recruiterAuth=require("../middleware/recruiterAuth")
 
-router.post("/",jobController.createjob)
+
+router.post("/",recruiterAuth,jobController.createjob)
 router.get("/",jobController.listAlljobs)
-router.get("/:userId",jobController.listjobbyId)
-router.delete("/:userId",jobController.deletejobById)
+router.get("/:jobId",jobController.listjobbyId)
+router.delete("/:jobId",recruiterAuth,jobController.deletejobById)
 module.exports=router

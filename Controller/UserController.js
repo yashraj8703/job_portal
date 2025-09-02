@@ -1,9 +1,19 @@
 const express = require("express");
 const User = require("../Model/User");
-
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const Application = require("../Model/Application");
 exports.createUser = async (req, res) => {
   try {
-    const user = await User.create(req.body); 
+    const { username, password, email, resume, ...rest } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      resume: resume || "",  
+      ...rest,
+    });
 
     res.status(201).json({
       message: "✅ User created successfully",
@@ -13,6 +23,32 @@ exports.createUser = async (req, res) => {
     console.error(err);
     res.status(400).json({
       message: "❌ Failed to create user",
+      error: err.message,
+    });
+  }
+};
+
+exports.signinUser = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const userExists = await User.findOne({ username });
+    if (!userExists) {
+      return res.status(404).json({ msg: "No user exists" });
+    }
+    const isPasswordMatch = await bcrypt.compare(password, userExists.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ msg: "Wrong Password" });
+    }
+    const token = jwt.sign(
+      { userId: userExists._id, role: "user" },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    res.json({ msg: "Sign in successfully", token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "❌ Login failed",
       error: err.message,
     });
   }
@@ -55,7 +91,9 @@ exports.deleteUserById = async (req, res) => {
     if (!deleteUser) {
       return res.status(404).json({ message: "❌ User not found" });
     }
-    res.status(200).json({ msg: "User deleted successfully", userId: deleteUser._id });
+    res
+      .status(200)
+      .json({ msg: "User deleted successfully", userId: deleteUser._id });
   } catch (err) {
     console.error(err);
     res.status(500).json({
@@ -64,3 +102,20 @@ exports.deleteUserById = async (req, res) => {
     });
   }
 };
+
+exports.getAppliedJobs=async(req,res)=>{
+  try{
+    const userId=req.user.userId
+    const applications=await Application.find({user:userId})
+    res.status(200).json({
+      msg: "Applied jobs fetched successfully",
+      applications,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      msg: "Failed to fetch applied jobs",
+      error: err.message,
+    });
+  }
+}
