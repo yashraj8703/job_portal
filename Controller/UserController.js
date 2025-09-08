@@ -2,7 +2,6 @@ const express = require("express");
 const User = require("../Model/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Application = require("../Model/Application");
 exports.createUser = async (req, res) => {
   try {
     const { username, password, email, resume, ...rest } = req.body;
@@ -102,20 +101,3 @@ exports.deleteUserById = async (req, res) => {
     });
   }
 };
-
-exports.getAppliedJobs=async(req,res)=>{
-  try{
-    const userId=req.user.userId
-    const applications=await Application.find({user:userId})
-    res.status(200).json({
-      msg: "Applied jobs fetched successfully",
-      applications,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      msg: "Failed to fetch applied jobs",
-      error: err.message,
-    });
-  }
-}

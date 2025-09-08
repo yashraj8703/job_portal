@@ -3,9 +3,11 @@ const User = require("../Model/User");
 const Job = require("../Model/Job");
 
 //* authenticated users can apply to jobs
+
 exports.applyJob = async (req, res) => {
   try {
     const { jobId } = req.params;
+    
     const userId = req.user.userId;
 
     const user = await User.findById(userId).select("resume");
